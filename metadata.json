@@ -1,0 +1,8 @@
+{
+  "name": "Remix: gemstoneOS 2000 Svalbard (UNDER CONSTRUCTION)",
+  "description": "Retro Windows 2000-style operating system simulator. Features an interactive desktop, Start bar, Gemmy AI Assistant, GemPaint, GemSweeper, Mineral Clicker, GemTune chiptune player, and customizable theme settings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
