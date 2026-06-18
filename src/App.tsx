@@ -78,6 +78,14 @@ export default function App() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [idleTime, setIdleTime] = useState(0);
+  const [hoveredTaskbarInfo, setHoveredTaskbarInfo] = useState<{
+    title: string;
+    status?: string;
+    desc: string;
+    isMinimized?: boolean;
+    appId?: string;
+  } | null>(null);
+  const [hoveredTaskbarRect, setHoveredTaskbarRect] = useState<{ left: number; top: number } | null>(null);
 
   // Z-Index Tracker to bring clicked windows to front
   const [maxZIndex, setMaxZIndex] = useState(10);
@@ -1052,9 +1060,9 @@ export default function App() {
           DESKTOP ICONS GRID AREA
          ------------------------------------------ */}
       <main className={`flex-1 relative p-4 grid grid-cols-1 select-none pointer-events-auto [grid-auto-flow:column] [grid-template-rows:repeat(auto-fill,minmax(76px,1fr))] gap-x-2 gap-y-4 w-fit h-[calc(100%-40px)] z-0 transition-all duration-200 ${isRefreshing ? "opacity-35 scale-[0.99] blur-[0.5px]" : "opacity-100 scale-100"}`}>
-        {desktopIcons.map((icon) => (
+        {desktopIcons.map((icon, index) => (
           <button
-            key={icon.id}
+            key={`${icon.id}_${index}`}
             onDoubleClick={() => launchApp(icon.id)}
             onTouchEnd={() => launchApp(icon.id)} // healthy touch support
             className="w-[72px] sm:w-[84px] h-[72px] flex flex-col items-center justify-center p-1 rounded hover:bg-white/10 active:bg-white/20 text-white cursor-default group"
@@ -1743,6 +1751,18 @@ export default function App() {
           <div className="hidden sm:flex items-center gap-1">
             <button
               onClick={() => launchApp("gemmy")}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredTaskbarRect({ left: rect.left, top: rect.top });
+                setHoveredTaskbarInfo({
+                  title: "Gemmy Assistant",
+                  desc: "Instant AI assistant interface for gemstone miners",
+                });
+              }}
+              onMouseLeave={() => {
+                setHoveredTaskbarInfo(null);
+                setHoveredTaskbarRect(null);
+              }}
               className="retro-button !p-1 flex items-center justify-center rounded-sm shrink-0"
               title="Speak with Gemmy Assistant"
             >
@@ -1750,6 +1770,18 @@ export default function App() {
             </button>
             <button
               onClick={() => launchApp("internet")}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredTaskbarRect({ left: rect.left, top: rect.top });
+                setHoveredTaskbarInfo({
+                  title: "Internet Surfer",
+                  desc: "Connect to the Svalbard satellite network and outer web nodes",
+                });
+              }}
+              onMouseLeave={() => {
+                setHoveredTaskbarInfo(null);
+                setHoveredTaskbarRect(null);
+              }}
               className="retro-button !p-1 flex items-center justify-center rounded-sm shrink-0"
               title="Surfer Internet Explorer"
             >
@@ -1757,6 +1789,18 @@ export default function App() {
             </button>
             <button
               onClick={() => launchApp("paint")}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredTaskbarRect({ left: rect.left, top: rect.top });
+                setHoveredTaskbarInfo({
+                  title: "Paintbrush Studio",
+                  desc: "Draw raster graphics and blueprint vectors with high performance",
+                });
+              }}
+              onMouseLeave={() => {
+                setHoveredTaskbarInfo(null);
+                setHoveredTaskbarRect(null);
+              }}
               className="retro-button !p-1 flex items-center justify-center rounded-sm shrink-0"
               title="Draw Paint masterworks"
             >
@@ -1779,6 +1823,24 @@ export default function App() {
                   } else {
                     focusWindow(win.id);
                   }
+                  // Dimiss tooltip when clicking to avoid sticky hovers
+                  setHoveredTaskbarInfo(null);
+                  setHoveredTaskbarRect(null);
+                }}
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setHoveredTaskbarRect({ left: rect.left, top: rect.top });
+                  setHoveredTaskbarInfo({
+                    title: win.title.split("-")[0],
+                    status: win.isMinimized ? "MINIMIZED" : "ACTIVE RUNNING",
+                    isMinimized: win.isMinimized,
+                    desc: win.isMinimized ? "Click button to restore application workspace to main desktop tray." : "Click button to minimize this window panel back into the tray.",
+                    appId: win.id,
+                  });
+                }}
+                onMouseLeave={() => {
+                  setHoveredTaskbarInfo(null);
+                  setHoveredTaskbarRect(null);
                 }}
                 className={`retro-button select-none shrink-0 text-left truncate font-medium text-[10px] uppercase max-w-[120px] flex items-center gap-1.5 ${
                   isActive ? "bg-[#e2e2e2] border-t-[#808080] border-l-[#808080] border-r-white border-b-white !font-bold" : ""
@@ -1796,19 +1858,90 @@ export default function App() {
           {/* Quick status beep toggle icon */}
           <button
             onClick={() => setSettings({ ...settings, soundEnabled: !settings.soundEnabled })}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setHoveredTaskbarRect({ left: rect.left - 50, top: rect.top });
+              setHoveredTaskbarInfo({
+                title: "Driver Beep Settings",
+                desc: settings.soundEnabled ? "Mutes chassis sound alerts and hardware interface ticks" : "Enables digital buzzer alerts on boot cycles and click actions",
+              });
+            }}
+            onMouseLeave={() => {
+              setHoveredTaskbarInfo(null);
+              setHoveredTaskbarRect(null);
+            }}
             className="hover:bg-gray-100 flex items-center justify-center p-[2px] rounded h-[20px] transition-colors"
             title={settings.soundEnabled ? "Mute Speaker driver beeps" : "Enable Driver beeps"}
           >
             {settings.soundEnabled ? <Volume2 size={13} className="text-emerald-800" /> : <VolumeX size={13} className="text-red-700" />}
           </button>
 
-          <div className="flex items-center gap-1 text-[11px] font-bold text-gray-800">
+          <div
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setHoveredTaskbarRect({ left: rect.left - 80, top: rect.top });
+              setHoveredTaskbarInfo({
+                title: "System Clock Driver",
+                desc: "Accurate real-time workstation clock synchronized to Longyearbyen NTP servers",
+              });
+            }}
+            onMouseLeave={() => {
+              setHoveredTaskbarInfo(null);
+              setHoveredTaskbarRect(null);
+            }}
+            className="flex items-center gap-1 text-[11px] font-bold text-gray-800 cursor-default"
+          >
             <Clock size={11.5} className="text-indigo-850 shrink-0" />
             <span>{currentTime || "09:00:00"}</span>
           </div>
         </div>
 
       </footer>
+
+      {/* Retro yellow Taskbar Hover Tips */}
+      {hoveredTaskbarInfo && hoveredTaskbarRect && (
+        <div
+          style={{
+            left: `${Math.max(12, Math.min(window.innerWidth - 212, hoveredTaskbarRect.left))}px`,
+            bottom: "44px",
+          }}
+          className="fixed bg-[#ffffe1] text-black border border-black p-2 shadow-md text-[10px] font-sans z-[1000] pointer-events-none flex flex-col gap-0.5 rounded-sm select-none max-w-[200px]"
+        >
+          <div className="flex items-center gap-1.5 border-b border-gray-300 pb-1 mb-1">
+            <span className="font-extrabold text-[#000080] tracking-wide uppercase truncate">
+              {hoveredTaskbarInfo.title}
+            </span>
+            {hoveredTaskbarInfo.status && (
+              <span className={`w-2 h-2 rounded-full ring-1 ring-white shrink-0 ${hoveredTaskbarInfo.isMinimized ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
+            )}
+          </div>
+          {hoveredTaskbarInfo.status && (
+            <div className="text-[9px] font-mono font-bold text-gray-700 uppercase mb-0.5">
+              STATUS: <span className={hoveredTaskbarInfo.isMinimized ? "text-amber-800" : "text-emerald-800"}>{hoveredTaskbarInfo.status}</span>
+            </div>
+          )}
+          <div className="text-slate-700 leading-tight">
+            {hoveredTaskbarInfo.desc}
+          </div>
+          
+          {hoveredTaskbarInfo.appId && (
+            <div className="text-[8px] text-indigo-900 mt-1 font-mono uppercase bg-blue-50 px-1 py-0.5 rounded border border-blue-200 w-fit shrink-0">
+              {hoveredTaskbarInfo.appId === "minesweeper" && "🎮 C-MOS Miner Strategy Code"}
+              {hoveredTaskbarInfo.appId === "gemmy" && "💎 GemCore Neural Brain AI"}
+              {hoveredTaskbarInfo.appId === "notepad" && "📝 Plaintext Text Editor v1.00"}
+              {hoveredTaskbarInfo.appId === "paint" && "🎨 Paintbrush Vector Board"}
+              {hoveredTaskbarInfo.appId === "media_player" && "🎵 Arctic FM wave Media Deck"}
+              {hoveredTaskbarInfo.appId === "clicker" && "⭐ Diamond Miner Industrial Operator"}
+              {hoveredTaskbarInfo.appId === "control_panel" && "⚙️ Bios Host Registry Overrides"}
+              {hoveredTaskbarInfo.appId === "file_explorer" && "📁 Directory Resource Explorer"}
+              {hoveredTaskbarInfo.appId === "terminal" && "⌨️ 16-Bit Shell Emulator"}
+              {hoveredTaskbarInfo.appId === "calculator" && "🧮 ALU Hex Arithmetic Processor"}
+              {hoveredTaskbarInfo.appId === "sys_info" && "📊 Hardware & Environment Telemetry"}
+              {!["minesweeper", "gemmy", "notepad", "paint", "media_player", "clicker", "control_panel", "file_explorer", "terminal", "calculator", "sys_info"].includes(hoveredTaskbarInfo.appId) && "📦 General System Core Module"}
+            </div>
+          )}
+        </div>
+      )}
 
       {contextMenu && (
         <ContextMenu
